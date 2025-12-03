@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Focus - Pomodoro Timer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            try {
+                const saved = localStorage.getItem('auraFocus_settings');
+                const settings = saved ? JSON.parse(saved) : null;
+                const theme = settings?.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.dataset.theme = theme;
+            } catch (e) {
+                document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="app-container" id="app">
+        <!-- Zen Mode Overlay -->
+        <div class="zen-overlay" id="zenOverlay">
+            <div class="zen-timer" id="zenTimer">25:00</div>
+            <button class="zen-exit-btn" id="zenExitBtn" aria-label="Exit Zen Mode">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="16" cy="16" r="8" fill="currentColor" opacity="0.3"/>
+                    <circle cx="16" cy="16" r="4" fill="currentColor"/>
+                </svg>
+                <span class="logo-text">Aura Focus</span>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Timer Section -->
+            <section class="timer-section">
+                <div class="session-tabs">
+                    <button class="session-tab active" data-session="focus">Focus</button>
+                    <button class="session-tab" data-session="short-break">Short Break</button>
+                    <button class="session-tab" data-session="long-break">Long Break</button>
+                </div>
+                
+                <div class="timer-display">
+                    <svg class="timer-ring" viewBox="0 0 200 200">
+                        <circle class="timer-ring-bg" cx="100" cy="100" r="90"/>
+                        <circle class="timer-ring-progress" cx="100" cy="100" r="90" id="timerProgress"/>
+                    </svg>
+                    <div class="timer-content">
+                        <span class="timer-time" id="timerDisplay">25:00</span>
+                        <span class="timer-label" id="timerLabel">Focus Time</span>
+                    </div>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="control-btn secondary" id="resetBtn" aria-label="Reset Timer">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                    </button>
+                    <button class="control-btn primary" id="startBtn" aria-label="Start Timer">
+                        <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    </button>
+                    <button class="control-btn secondary" id="zenBtn" aria-label="Zen Mode">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="session-counter">
+                    <span id="sessionCount">Session 1 of 4</span>
+                </div>
+            </section>
+
+            <!-- Motivational Quote -->
+            <section class="quote-section">
+                <blockquote class="quote" id="quote">
+                    <p class="quote-text">"The secret of getting ahead is getting started."</p>
+                    <cite class="quote-author">— Mark Twain</cite>
+                </blockquote>
+            </section>
+
+            <!-- Tasks Section -->
+            <section class="tasks-section">
+                <div class="tasks-header">
+                    <h2>Tasks</h2>
+                    <span class="tasks-count" id="tasksCount">0 tasks</span>
+                </div>
+                <form class="task-form" id="taskForm">
+                    <input type="text" class="task-input" id="taskInput" placeholder="Add a new task..." maxlength="100">
+                    <button type="submit" class="task-add-btn" aria-label="Add Task">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </form>
+                <ul class="task-list" id="taskList">
+                    <!-- Tasks will be added here dynamically -->
+                </ul>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <h2>Today's Progress</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon focus">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="focusTime">0m</span>
+                            <span class="stat-label">Focus Time</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon sessions">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="completedSessions">0</span>
+                            <span class="stat-label">Sessions</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon tasks">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="completedTasks">0</span>
+                            <span class="stat-label">Tasks Done</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settingsModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="modal-close" id="closeSettings" aria-label="Close Settings">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <div class="settings-group">
+                        <h3>Timer Duration (minutes)</h3>
+                        <div class="settings-row">
+                            <label for="focusDuration">Focus</label>
+                            <input type="number" id="focusDuration" min="1" max="120" value="25">
+                        </div>
+                        <div class="settings-row">
+                            <label for="shortBreakDuration">Short Break</label>
+                            <input type="number" id="shortBreakDuration" min="1" max="30" value="5">
+                        </div>
+                        <div class="settings-row">
+                            <label for="longBreakDuration">Long Break</label>
+                            <input type="number" id="longBreakDuration" min="1" max="60" value="15">
+                        </div>
+                        <div class="settings-row">
+                            <label for="sessionsUntilLongBreak">Sessions until long break</label>
+                            <input type="number" id="sessionsUntilLongBreak" min="1" max="10" value="4">
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Sound</h3>
+                        <div class="settings-row">
+                            <label for="soundEnabled">Sound Alerts</label>
+                            <label class="toggle">
+                                <input type="checkbox" id="soundEnabled" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-row">
+                            <label for="soundVolume">Volume</label>
+                            <input type="range" id="soundVolume" min="0" max="100" value="50">
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Theme</h3>
+                        <div class="theme-options">
+                            <button class="theme-option" data-theme="light">
+                                <span class="theme-preview light"></span>
+                                <span>Light</span>
+                            </button>
+                            <button class="theme-option" data-theme="dark">
+                                <span class="theme-preview dark"></span>
+                                <span>Dark</span>
+                            </button>
+                            <button class="theme-option" data-theme="ocean">
+                                <span class="theme-preview ocean"></span>
+                                <span>Ocean</span>
+                            </button>
+                            <button class="theme-option" data-theme="forest">
+                                <span class="theme-preview forest"></span>
+                                <span>Forest</span>
+                            </button>
+                            <button class="theme-option" data-theme="sunset">
+                                <span class="theme-preview sunset"></span>
+                                <span>Sunset</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Data</h3>
+                        <button class="danger-btn" id="resetDataBtn">Reset All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> for productivity</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
