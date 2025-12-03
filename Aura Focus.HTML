@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Focus</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgba(203, 213, 225, 0.5); 
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Icon = ({ children, className, size = 24, style, ...props }) => (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width={size}
+                height={size}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={className}
+                style={style}
+                {...props}
+            >
+                {children}
+            </svg>
+        );
+
+        const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3" /></Icon>;
+        const Pause = (props) => <Icon {...props}><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></Icon>;
+        const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></Icon>;
+        const Check = (props) => <Icon {...props}><polyline points="20 6 9 17 4 12" /></Icon>;
+        const Plus = (props) => <Icon {...props}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></Icon>;
+        const Trash2 = (props) => <Icon {...props}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></Icon>;
+        const Settings = (props) => <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></Icon>;
+        const Volume2 = (props) => <Icon {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></Icon>;
+        const VolumeX = (props) => <Icon {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></Icon>;
+        const Coffee = (props) => <Icon {...props}><path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></Icon>;
+        const Brain = (props) => <Icon {...props}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></Icon>;
+        const Moon = (props) => <Icon {...props}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></Icon>;
+        const Maximize2 = (props) => <Icon {...props}><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" /></Icon>;
+        const Minimize2 = (props) => <Icon {...props}><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /><line x1="14" y1="10" x2="21" y2="3" /><line x1="3" y1="21" x2="10" y2="14" /></Icon>;
+        const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon>;
+
+        const playNotification = (type = 'complete') => {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'complete') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+                    osc.start(now);
+                    osc.stop(now + 1.5);
+
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(329.63, now + 0.1);
+                    gain2.gain.setValueAtTime(0.05, now);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 2);
+                    osc2.start(now);
+                    osc2.stop(now + 2);
+                } else if (type === 'tick') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    gainNode.gain.setValueAtTime(0.02, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'start') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.linearRampToValueAtTime(660, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.05, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.error("Audio play failed", e);
+            }
+        };
+
+        const QUOTES = [
+            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+            { text: "It always seems impossible until it is done.", author: "Nelson Mandela" },
+            { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+            { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+            { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+            { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+            { text: "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.", author: "Stephen King" },
+            { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+            { text: "What we fear of doing most is usually what we most need to do.", author: "Ralph Waldo Emerson" },
+            { text: "Productivity is being able to do things that you were never able to do before.", author: "Franz Kafka" },
+            { text: "Your focus determines your reality.", author: "George Lucas" },
+            { text: "Until we can manage time, we can manage nothing else.", author: "Peter Drucker" }
+        ];
+
+        const MODES = {
+            focus: { 
+                label: 'Focus', 
+                minutes: 25, 
+                color: 'text-rose-500', 
+                bg: 'from-rose-400/20 to-orange-300/20', 
+                blob1: 'bg-rose-400',
+                blob2: 'bg-orange-300',
+                border: 'border-rose-200' 
+            },
+            shortBreak: { 
+                label: 'Short Break', 
+                minutes: 5, 
+                color: 'text-teal-500', 
+                bg: 'from-teal-400/20 to-emerald-300/20', 
+                blob1: 'bg-teal-400',
+                blob2: 'bg-emerald-300',
+                border: 'border-teal-200' 
+            },
+            longBreak: { 
+                label: 'Long Break', 
+                minutes: 15, 
+                color: 'text-indigo-500', 
+                bg: 'from-indigo-400/20 to-purple-300/20', 
+                blob1: 'bg-indigo-400',
+                blob2: 'bg-purple-300',
+                border: 'border-indigo-200' 
+            },
+        };
+
+        const THEMES = {
+            sunrise: { name: 'Sunrise', bg: 'bg-gradient-to-br from-orange-100 via-rose-100 to-indigo-100', accent: 'rose' },
+            midnight: { name: 'Midnight', bg: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800', text: 'text-white', accent: 'purple' },
+            forest: { name: 'Forest', bg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100', accent: 'emerald' },
+            ocean: { name: 'Ocean', bg: 'bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100', accent: 'sky' }
+        };
+
+        const Button = ({ onClick, children, className = "", active = false, variant = "primary" }) => {
+            const baseStyle = "px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95";
+            const variants = {
+                primary: active 
+                ? "bg-white shadow-lg scale-105 text-slate-800" 
+                : "bg-white/40 hover:bg-white/60 text-slate-700 backdrop-blur-sm",
+                ghost: "hover:bg-black/5 text-slate-600",
+                icon: "p-3 rounded-full hover:bg-black/5 text-slate-600"
+            };
+            
+            return (
+                <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                {children}
+                </button>
+            );
+        };
+
+        function AuraFocus() {
+            const [mode, setMode] = useState('focus');
+            const [timeLeft, setTimeLeft] = useState(MODES.focus.minutes * 60);
+            const [isActive, setIsActive] = useState(false);
+            const [tasks, setTasks] = useState([]);
+            const [activeTaskId, setActiveTaskId] = useState(null);
+            const [newTaskInput, setNewTaskInput] = useState('');
+            const [soundEnabled, setSoundEnabled] = useState(true);
+            const [settingsOpen, setSettingsOpen] = useState(false);
+            const [zenMode, setZenMode] = useState(false);
+            const [currentTheme, setCurrentTheme] = useState('sunrise');
+            const [stats, setStats] = useState({ focus: 0, break: 0 });
+            const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
+
+            const timerRef = useRef(null);
+
+            useEffect(() => {
+                setCurrentQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+            }, [mode]);
+
+            useEffect(() => {
+                if (isActive && timeLeft > 0) {
+                    timerRef.current = setInterval(() => {
+                        setTimeLeft((prev) => prev - 1);
+                    }, 1000);
+                } else if (timeLeft === 0) {
+                    setIsActive(false);
+                    clearInterval(timerRef.current);
+                    if (soundEnabled) playNotification('complete');
+                    
+                    if (mode === 'focus') {
+                        setStats(p => ({ ...p, focus: p.focus + 1 }));
+                        if (activeTaskId) {
+                            setTasks(prev => prev.map(t => 
+                                t.id === activeTaskId ? { ...t, completedPomos: t.completedPomos + 1 } : t
+                            ));
+                        }
+                    } else {
+                        setStats(p => ({ ...p, break: p.break + 1 }));
+                    }
+                }
+
+                return () => clearInterval(timerRef.current);
+            }, [isActive, timeLeft, mode, activeTaskId, soundEnabled]);
+
+            const toggleTimer = () => {
+                if (!isActive && soundEnabled) playNotification('start');
+                setIsActive(!isActive);
+            };
+
+            const resetTimer = () => {
+                setIsActive(false);
+                setTimeLeft(MODES[mode].minutes * 60);
+            };
+
+            const switchMode = (newMode) => {
+                setMode(newMode);
+                setIsActive(false);
+                setTimeLeft(MODES[newMode].minutes * 60);
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const calculateProgress = () => {
+                const totalSeconds = MODES[mode].minutes * 60;
+                const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
+                return progress;
+            };
+
+            const addTask = (e) => {
+                e.preventDefault();
+                if (!newTaskInput.trim()) return;
+                const newTask = {
+                    id: Date.now(),
+                    text: newTaskInput,
+                    completedPomos: 0,
+                    estPomos: 1,
+                    completed: false
+                };
+                setTasks([...tasks, newTask]);
+                setNewTaskInput('');
+                if (!activeTaskId) setActiveTaskId(newTask.id);
+            };
+
+            const toggleTaskComplete = (id) => {
+                setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+            };
+
+            const deleteTask = (id) => {
+                setTasks(tasks.filter(t => t.id !== id));
+                if (activeTaskId === id) setActiveTaskId(null);
+            };
+
+            const activeTask = activeTaskId ? tasks.find(t => t.id === activeTaskId) : null;
+
+            const theme = THEMES[currentTheme];
+            const isDark = currentTheme === 'midnight';
+            const textColor = isDark ? 'text-white/90' : 'text-slate-800';
+            const subTextColor = isDark ? 'text-white/60' : 'text-slate-500';
+            const cardBg = isDark ? 'bg-white/10 border-white/10' : 'bg-white/60 border-white/40';
+            const progressColor = mode === 'focus' ? '#f43f5e' : mode === 'shortBreak' ? '#14b8a6' : '#6366f1';
+
+            return (
+                <div className={`h-screen w-full transition-all duration-1000 ease-in-out ${theme.bg} flex flex-col items-center relative overflow-hidden font-sans`}>
+                    
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] opacity-40 animate-pulse ${MODES[mode].blob1}/20`} />
+                        <div className={`absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] opacity-40 animate-pulse delay-1000 ${MODES[mode].blob2}/20`} />
+                    </div>
+
+                    <header className={`w-full p-6 flex justify-between items-center z-10 shrink-0 ${zenMode ? 'opacity-0 hover:opacity-100 transition-opacity' : ''}`}>
+                        <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${cardBg} backdrop-blur-md shadow-sm`}>
+                            <Brain size={20} style={{color: progressColor}} />
+                        </div>
+                        <h1 className={`text-xl font-bold tracking-tight ${textColor}`}>Aura Focus</h1>
+                        </div>
+                        <div className="flex gap-2">
+                        <Button variant="icon" onClick={() => setZenMode(!zenMode)}>
+                            {zenMode ? <Minimize2 size={18} className={textColor}/> : <Maximize2 size={18} className={textColor}/>}
+                        </Button>
+                        <Button variant="icon" onClick={() => setSoundEnabled(!soundEnabled)}>
+                            {soundEnabled ? <Volume2 size={18} className={textColor}/> : <VolumeX size={18} className={textColor}/>}
+                        </Button>
+                        <Button variant="icon" onClick={() => setSettingsOpen(true)}>
+                            <Settings size={18} className={textColor}/>
+                        </Button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 w-full flex flex-col md:flex-row items-center justify-evenly gap-10 md:gap-20 z-10 p-10 min-h-0">
+                        
+                        {/* LEFT COLUMN: TIMER & QUOTES */}
+                        <div className="flex flex-col items-center shrink-0">
+                            <div className="relative mb-6 shrink-0 group">
+                                <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+                                    <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl">
+                                    <circle
+                                        cx="50%"
+                                        cy="50%"
+                                        r="45%"
+                                        className="stroke-current text-black/5"
+                                        strokeWidth="12"
+                                        fill="transparent"
+                                    />
+                                    <circle
+                                        cx="50%"
+                                        cy="50%"
+                                        r="45%"
+                                        stroke={progressColor}
+                                        strokeWidth="12"
+                                        fill="transparent"
+                                        strokeLinecap="round"
+                                        style={{
+                                        strokeDasharray: '283%',
+                                        strokeDashoffset: `${283 - (283 * calculateProgress()) / 100}%`,
+                                        transition: 'stroke-dashoffset 1s linear, stroke 1s ease'
+                                        }}
+                                    />
+                                    </svg>
+                                    
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-2 transition-colors ${MODES[mode].color} bg-white/80 backdrop-blur shadow-sm`}>
+                                            {MODES[mode].label}
+                                        </div>
+                                        
+                                        <div className={`text-6xl md:text-8xl font-light tracking-tighter tabular-nums ${textColor} drop-shadow-sm transition-all ${isActive ? 'scale-105' : 'scale-100'}`}>
+                                            {formatTime(timeLeft)}
+                                        </div>
+                                        
+                                        {!zenMode && activeTask && (
+                                            <div className={`mt-2 max-w-[180px] text-center truncate text-sm font-medium ${subTextColor} px-3 py-1 rounded-lg bg-black/5`}>
+                                            Current: {activeTask.text}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className={`absolute -bottom-5 left-1/2 transform -translate-x-1/2 flex items-center gap-4 transition-all duration-300 ${isActive ? 'translate-y-2' : 'translate-y-0'}`}>
+                                    <button 
+                                        onClick={resetTimer}
+                                        className={`p-4 rounded-full bg-white shadow-lg hover:bg-slate-50 text-slate-400 transition-all active:scale-90 hover:rotate-[-90deg]`}
+                                    >
+                                    <RotateCcw size={20} />
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={toggleTimer}
+                                        className={`p-6 rounded-full shadow-xl transition-all active:scale-95 hover:scale-105 flex items-center justify-center ${
+                                        mode === 'focus' ? 'bg-rose-500 hover:bg-rose-600' : 
+                                        mode === 'shortBreak' ? 'bg-teal-500 hover:bg-teal-600' : 
+                                        'bg-indigo-500 hover:bg-indigo-600'
+                                        } text-white`}
+                                    >
+                                    {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1"/>}
+                                    </button>
+                                    
+                                    <div className={`absolute top-0 left-full ml-4 flex flex-col gap-2 transition-opacity duration-300 ${isActive ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                                        <button onClick={() => switchMode('focus')} className={`p-2 rounded-full bg-white/40 hover:bg-white text-rose-500 shadow-sm`} title="Focus">
+                                        <Brain size={16}/>
+                                        </button>
+                                        <button onClick={() => switchMode('shortBreak')} className={`p-2 rounded-full bg-white/40 hover:bg-white text-teal-500 shadow-sm`} title="Short Break">
+                                        <Coffee size={16}/>
+                                        </button>
+                                        <button onClick={() => switchMode('longBreak')} className={`p-2 rounded-full bg-white/40 hover:bg-white text-indigo-500 shadow-sm`} title="Long Break">
+                                        <Moon size={16}/>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`mt-16 mb-2 max-w-xs text-center transition-all duration-1000 shrink-0 ${isActive ? 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100' : 'opacity-90'}`}>
+                                <p className={`text-xs font-medium italic ${textColor} leading-relaxed`}>"{currentQuote.text}"</p>
+                                <p className={`text-[10px] mt-1 ${subTextColor}`}>— {currentQuote.author}</p>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: TASKS */}
+                        {!zenMode && (
+                        <div className={`w-full md:w-1/2 lg:w-2/3 h-[75vh] mt-4 md:mt-0 flex flex-col transition-all duration-500 animate-in slide-in-from-bottom-10 fade-in`}>
+                            <div className="flex justify-between items-end mb-2 shrink-0">
+                                <h2 className={`text-xl font-bold ${textColor}`}>Tasks</h2>
+                                <span className={`text-xs ${subTextColor}`}>
+                                    {stats.focus} Sessions Completed
+                                </span>
+                            </div>
+
+                            <form onSubmit={addTask} className="relative mb-4 shrink-0 group">
+                                <input
+                                    type="text"
+                                    value={newTaskInput}
+                                    onChange={(e) => setNewTaskInput(e.target.value)}
+                                    placeholder="What are you working on?"
+                                    className={`w-full p-4 pr-12 rounded-2xl outline-none transition-all shadow-sm placeholder:text-slate-400 text-base ${isDark ? 'bg-white/10 text-white focus:bg-white/20' : 'bg-white/60 text-slate-800 focus:bg-white/80'}`}
+                                />
+                                <button 
+                                    type="submit"
+                                    className="absolute right-3 top-3 p-2 rounded-xl bg-slate-800 text-white opacity-0 group-focus-within:opacity-100 transition-all hover:bg-black"
+                                >
+                                    <Plus size={20} />
+                                </button>
+                            </form>
+
+                            <div className="space-y-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 min-h-0 flex-1">
+                            {tasks.length === 0 && (
+                                <div className={`flex flex-col items-center justify-center h-full text-center ${subTextColor} italic opacity-50`}>
+                                <div className="mb-2">✨</div>
+                                No tasks yet. Stay focused!
+                                </div>
+                            )}
+                            
+                            {tasks.map(task => (
+                                <div 
+                                key={task.id}
+                                onClick={() => setActiveTaskId(task.id)}
+                                className={`group flex items-center justify-between p-4 rounded-xl transition-all cursor-pointer border hover:border-transparent hover:shadow-lg ${
+                                    activeTaskId === task.id 
+                                    ? `bg-white shadow-lg border-l-8 ${mode === 'focus' ? 'border-l-rose-500' : 'border-l-indigo-500'}`
+                                    : `border-transparent hover:bg-white/40 ${isDark ? 'hover:bg-white/10' : ''}`
+                                }`}
+                                >
+                                <div className="flex items-center gap-4 overflow-hidden w-full">
+                                    <button 
+                                    onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+                                    className={`p-1 rounded-full border-2 transition-colors flex-shrink-0 ${task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-emerald-400'}`}
+                                    >
+                                    <Check size={16} className={task.completed ? 'opacity-100' : 'opacity-0'} />
+                                    </button>
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <span className={`font-semibold truncate text-base ${task.completed ? 'line-through opacity-50' : ''} ${textColor}`}>
+                                            {task.text}
+                                        </span>
+                                        <div className="flex gap-1.5 mt-1">
+                                            {[...Array(task.completedPomos)].map((_, i) => (
+                                                <div key={i} className="w-1.5 h-1.5 rounded-full bg-rose-400/80" />
+                                            ))}
+                                            {[...Array(Math.max(0, task.estPomos - task.completedPomos))].map((_, i) => (
+                                                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300/50" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                                    className={`p-2 text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0`}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                                </div>
+                            ))}
+                            </div>
+                        </div>
+                        )}
+                    </main>
+
+                    {settingsOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 relative overflow-hidden">
+                            <button 
+                                onClick={() => setSettingsOpen(false)}
+                                className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full text-slate-500"
+                            >
+                                <X size={20} />
+                            </button>
+                            
+                            <h2 className="text-xl font-bold text-slate-800 mb-6">Settings</h2>
+                            
+                            <div className="mb-8">
+                                <label className="text-sm font-semibold text-slate-500 mb-3 block uppercase tracking-wider">Visual Theme</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {Object.entries(THEMES).map(([key, t]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setCurrentTheme(key)}
+                                            className={`p-3 rounded-xl text-left text-sm font-medium transition-all border-2 ${currentTheme === key ? 'border-slate-800 scale-[1.02]' : 'border-transparent hover:bg-slate-50'}`}
+                                        >
+                                            <div className={`w-full h-8 rounded-lg mb-2 ${t.bg}`} />
+                                            {t.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400">
+                                    Aura Focus v1.0 • Single File HTML
+                                </p>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AuraFocus />);
+    </script>
+</body>
+</html>
